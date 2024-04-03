@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "approx-umap"
+version = "0.1.0"
+description = ""
+authors = [
+    "Pierre Guetschel <pierre.guetschel@donders.ru.nl>",
+    "Peter Wassenaar <peter.wassenaar@ru.nl>",
+]
+readme = "README.md"
+packages = [{include = "approx_umap"}]
+license = "BSD-3-Clause"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+umap-learn = "^0.5.5"
+
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.1.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
