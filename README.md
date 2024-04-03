@@ -18,7 +18,7 @@ source space and computing their weighted average in the embedding space.
 The weights are the inverse of the distances in the source space.
 
 Formally, the projection of a new point $x$ is approximated as follows:
-$$u=\sum_i^n\frac{\frac{1}{d_i}}{\sum^n_j\frac{1}{d_j}}u_i$$
+$$u=\sum_i^k\frac{\frac{1}{d_i}}{\sum_j^k \frac{1}{d_j}}u_i$$
 with $x_1\dots x_k$ the $k$ nearest neighbours of x in the source space
 among the points used for training (i.e., passed to `fit` or `fit_transform`),
 $d_i=distance(x, x_i)$, and $u_1\dots u_i$ the exact UMAP projections of $x_1\dots x_k$.
