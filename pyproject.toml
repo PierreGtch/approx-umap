@@ -1,14 +1,15 @@
 [tool.poetry]
 name = "approx-umap"
 version = "0.1.0"
-description = ""
+description = "Modification of the UMAP algorithm to allow for fast approximate projections of new data points."
 authors = [
     "Pierre Guetschel <pierre.guetschel@donders.ru.nl>",
     "Peter Wassenaar <peter.wassenaar@ru.nl>",
 ]
 readme = "README.md"
-packages = [{include = "approx_umap"}]
+packages = [{ include = "approx_umap" }]
 license = "BSD-3-Clause"
+repository = "https://github.com/PierreGtch/approx-umap"
 
 [tool.poetry.dependencies]
 python = "^3.10"
