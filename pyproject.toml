@@ -21,6 +21,10 @@ umap-learn = "^0.5.5"
 pytest = "^8.1.1"
 
 
+
+[tool.poetry.group.parametric_umap.dependencies]
+tensorflow = "^2.1"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
