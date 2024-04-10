@@ -50,7 +50,13 @@ emb_approx = ApproxUMAP().fit(X).transform(X)  # approximate UMAP projection
 Please, cite this work as:
 
 ```bibtex
-@inproceedings{
-    TODO
+@inproceedings{approx-umap2024,
+    title = {Approximate UMAP allows for high-rate online visualization of high-dimensional data streams},
+    author = {Peter Wassenaar and Pierre Guetschel and Michael Tangermann},
+    year = {2024},
+    month = {September},
+    booktitle = {8th Graz Brain-Computer Interface Conference},
+    address = {Graz, Austria},
+    url = {https://arxiv.org/abs/2404.04001},
 }
 ```
