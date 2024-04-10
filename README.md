@@ -55,7 +55,7 @@ Please, cite this work as:
     author = {Peter Wassenaar and Pierre Guetschel and Michael Tangermann},
     year = {2024},
     month = {September},
-    booktitle = {8th Graz Brain-Computer Interface Conference},
+    booktitle = {9th Graz Brain-Computer Interface Conference},
     address = {Graz, Austria},
     url = {https://arxiv.org/abs/2404.04001},
 }
