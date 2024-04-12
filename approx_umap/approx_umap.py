@@ -124,7 +124,9 @@ class ApproxUMAP(UMAP, metaclass=PostInitCaller):
         X_new : array, shape (n_samples, n_components)
             Approximate embedding of the new data in low-dimensional space.
         """
-        neigh_dist, neigh_ind = self._knn.kneighbors(X, return_distance=True)
+        n_neighbors = min(self._knn.n_neighbors, self.embedding_.shape[0])
+        neigh_dist, neigh_ind = self._knn.kneighbors(
+            X, n_neighbors=n_neighbors, return_distance=True)
         neigh_emb = self.embedding_[neigh_ind]
         epsilon = 1e-8
         neigh_sim = 1 / (neigh_dist + epsilon)
