@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "approx-umap"
-version = "0.1.3"
+version = "0.2.0"
 description = "Modification of the UMAP algorithm to allow for fast approximate projections of new data points."
 authors = [
     "Pierre Guetschel <pierre.guetschel@donders.ru.nl>",
