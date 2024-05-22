@@ -22,7 +22,7 @@ $$u=\sum_i^k\frac{f(k d_i)}{\sum_j^kf(k d_j)}u_i$$
 with $x_1\dots x_k$ the $k$ nearest neighbours of $x$ in the source space
 among the points used for training (i.e., passed to `fit` or `fit_transform`),
 $d_i=distance(x, x_i)$, $u_1\dots u_i$ the exact UMAP projections of $x_1\dots x_k$, and $k$ the temperature parameter.
-The function $f(\cdot)$ corresponds to $\frac{1}{\cdot}$ if `fn='inv'`, and to $\frac{1}{e^{\cdot}$ if `fn='exp'`.
+The function $f(\cdot)$ corresponds to $\frac{1}{\cdot}$ if `fn='inv'`, and to $\frac{1}{e^{\cdot}}$ if `fn='exp'`.
 
 ## Installation
 
