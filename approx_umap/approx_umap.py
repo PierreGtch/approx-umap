@@ -211,12 +211,6 @@ class ApproxUMAP(UMAP, metaclass=NumpyDocstringInheritanceMeta):
         X : array, shape (n_samples, n_features)
             New data to be transformed.
 
-        force_all_finite : Whether to raise an error on np.inf, np.nan, pd.NA in array.
-            The possibilities are: - True: Force all values of array to be finite.
-                                   - False: accepts np.inf, np.nan, pd.NA in array.
-                                   - 'allow-nan': accepts only np.nan and pd.NA values in array.
-                                     Values cannot be infinite.
-
         Returns
         -------
         X_new : array, shape (n_samples, n_components)
@@ -230,3 +224,24 @@ class ApproxUMAP(UMAP, metaclass=NumpyDocstringInheritanceMeta):
         emb = np.sum(neigh_sim[:, :, None] / neigh_sim.sum(axis=1)[:, None, None] * neigh_emb,
                      axis=1)
         return emb
+
+    def transform_exact(self, X, force_all_finite=True):
+        """Original exact tronsform method from UMAP.
+
+        Parameters
+        ----------
+        X : array, shape (n_samples, n_features)
+            New data to be transformed.
+
+        force_all_finite : Whether to raise an error on np.inf, np.nan, pd.NA in array.
+            The possibilities are: - True: Force all values of array to be finite.
+                                   - False: accepts np.inf, np.nan, pd.NA in array.
+                                   - 'allow-nan': accepts only np.nan and pd.NA values in array.
+                                     Values cannot be infinite.
+
+        Returns
+        -------
+        X_new : array, shape (n_samples, n_components)
+            Embedding of the new data in low-dimensional space.
+        """
+        return super().transform(X, force_all_finite)

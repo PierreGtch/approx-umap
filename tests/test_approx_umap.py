@@ -19,6 +19,16 @@ def test_transform_same(k, fn):
     assert np.allclose(emb, emb2)
 
 
+def test_exact_transform():
+    X = np.random.rand(100, 10)
+    aumap = ApproxUMAP(n_neighbors=5, k=1e-6)  # extreme k, approx should not work
+    emb = aumap.fit_transform(X)
+    emb2 = aumap.transform(X)
+    emb3 = aumap.transform_exact(X)
+    assert not np.allclose(emb, emb2)
+    assert np.allclose(emb, emb3)
+
+
 def test_not_enough_neigh():
     X = np.random.rand(5, 10)
     aumap = ApproxUMAP(n_neighbors=10)
