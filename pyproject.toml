@@ -12,8 +12,9 @@ license = "BSD-3-Clause"
 repository = "https://github.com/PierreGtch/approx-umap"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.10, <3.13"
 umap-learn = "^0.5.5"
+docstring-inheritance = "^2.2.0"
 
 
 

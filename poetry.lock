@@ -148,6 +148,20 @@ files = [
 ]
 
 [[package]]
+name = "docstring-inheritance"
+version = "2.2.0"
+description = "Avoid writing and maintaining duplicated docstrings."
+optional = false
+python-versions = "<3.13,>=3.8"
+files = [
+    {file = "docstring-inheritance-2.2.0.tar.gz", hash = "sha256:30df77a04f32940000136b6a1cb20718b34291ba8905aacbf8375b85d7f85f9a"},
+    {file = "docstring_inheritance-2.2.0-py3-none-any.whl", hash = "sha256:70a15972a6ee456576db4392c4ab806736b62892b1307f846b4a19200f06781e"},
+]
+
+[package.extras]
+test = ["covdefaults", "pytest", "pytest-cov"]
+
+[[package]]
 name = "exceptiongroup"
 version = "1.2.0"
 description = "Backport of PEP 654 (exception groups)"
@@ -1312,5 +1326,5 @@ files = [
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.10"
-content-hash = "3c8a719453f39fa5632854d03279f865cee3473d1a51a4a2acde9e24356c1201"
+python-versions = ">=3.10, <3.13"
+content-hash = "2dec0f242b15601e1c07a7e6dd8853913de2d86bf10abed649b5428479edf217"
