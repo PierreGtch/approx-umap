@@ -42,8 +42,8 @@ import numpy as np
 from approx_umap import ApproxUMAP
 
 X = np.random.rand(100, 10)
-emb_exact = ApproxUMAP().fit_transform(X)  # exact UMAP projections
-emb_approx = ApproxUMAP().fit(X).transform(X)  # approximate UMAP projection
+emb_exact = ApproxUMAP(fn='exp', k=1).fit_transform(X)  # exact UMAP projections
+emb_approx = ApproxUMAP(fn='exp', k=1).fit(X).transform(X)  # approximate UMAP projection
 ```
 
 ## Citation
