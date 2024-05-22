@@ -123,7 +123,7 @@ class ApproxUMAP(UMAP, metaclass=NumpyDocstringInheritanceMeta):
         if self._fn == "inv":
             return 1 / (d + epsilon)
         if self._fn == "exp":
-            return np.exp(-d)
+            return np.exp(-d) + epsilon
         return self._fn(d)
 
     def fit(self, X, y=None, force_all_finite=True):
