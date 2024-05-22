@@ -15,6 +15,9 @@ class ApproxUMAP(UMAP, metaclass=NumpyDocstringInheritanceMeta):
     ----------
     k: float
         Temperature parameter.
+    fn: str | Callable[[ndarray], ndarray]
+        Function to apply to the distances before computing the weights.
+        If a string, can be 'inv' for 1/d or 'exp'  for exp(-d).
     """
 
     def __init__(
@@ -59,6 +62,7 @@ class ApproxUMAP(UMAP, metaclass=NumpyDocstringInheritanceMeta):
             disconnection_distance=None,
             precomputed_knn=(None, None, None),
             k=1,
+            fn="inv",
     ):
         super().__init__(
             n_neighbors=n_neighbors,
@@ -102,6 +106,7 @@ class ApproxUMAP(UMAP, metaclass=NumpyDocstringInheritanceMeta):
             precomputed_knn=precomputed_knn,
         )
         self.k = k
+        self._fn = fn
         self._knn = NearestNeighbors(
             n_neighbors=self.n_neighbors,
             # radius=1.0,
@@ -112,6 +117,14 @@ class ApproxUMAP(UMAP, metaclass=NumpyDocstringInheritanceMeta):
             metric_params=self.metric_kwds,
             n_jobs=self.n_jobs,
         )
+
+    def fn(self, d):
+        epsilon = 1e-8
+        if self._fn == "inv":
+            return 1 / (d + epsilon)
+        if self._fn == "exp":
+            return np.exp(-d)
+        return self._fn(d)
 
     def fit(self, X, y=None, force_all_finite=True):
         """Fit X into an embedded space.
@@ -213,9 +226,7 @@ class ApproxUMAP(UMAP, metaclass=NumpyDocstringInheritanceMeta):
         neigh_dist, neigh_ind = self._knn.kneighbors(
             X, n_neighbors=n_neighbors, return_distance=True)
         neigh_emb = self.embedding_[neigh_ind]
-        epsilon = 1e-8
-        neigh_sim = 1 / (neigh_dist + epsilon)
-        neigh_sim = 1 / (neigh_dist * self.k + epsilon)
+        neigh_sim = self.fn(neigh_dist * self.k)
         emb = np.sum(neigh_sim[:, :, None] / neigh_sim.sum(axis=1)[:, None, None] * neigh_emb,
                      axis=1)
         return emb
