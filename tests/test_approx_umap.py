@@ -1,11 +1,13 @@
+import pytest
 import numpy as np
 
 from approx_umap import ApproxUMAP
 
 
-def test_transform_same():
+@pytest.mark.parametrize("k", [0.5, 1, 2])
+def test_transform_same(k):
     X = np.random.rand(100, 10)
-    aumap = ApproxUMAP(n_neighbors=5)
+    aumap = ApproxUMAP(n_neighbors=5, k=k)
     emb = aumap.fit_transform(X)
     emb2 = aumap.transform(X)
     assert np.allclose(emb, emb2)

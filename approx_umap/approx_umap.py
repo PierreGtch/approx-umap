@@ -5,18 +5,103 @@
 import numpy as np
 from umap import UMAP
 from sklearn.neighbors import NearestNeighbors
+from docstring_inheritance import NumpyDocstringInheritanceMeta
 
 
-class PostInitCaller(type):
-    def __call__(cls, *args, **kwargs):
-        obj = type.__call__(cls, *args, **kwargs)
-        obj.__post_init__()
-        return obj
+class ApproxUMAP(UMAP, metaclass=NumpyDocstringInheritanceMeta):
+    """Approximate UMAP
 
+    Parameters
+    ----------
+    k: float
+        Temperature parameter.
+    """
 
-class ApproxUMAP(UMAP, metaclass=PostInitCaller):
-
-    def __post_init__(self):
+    def __init__(
+            self,
+            n_neighbors=15,
+            n_components=2,
+            metric="euclidean",
+            metric_kwds=None,
+            output_metric="euclidean",
+            output_metric_kwds=None,
+            n_epochs=None,
+            learning_rate=1.0,
+            init="spectral",
+            min_dist=0.1,
+            spread=1.0,
+            low_memory=True,
+            n_jobs=-1,
+            set_op_mix_ratio=1.0,
+            local_connectivity=1.0,
+            repulsion_strength=1.0,
+            negative_sample_rate=5,
+            transform_queue_size=4.0,
+            a=None,
+            b=None,
+            random_state=None,
+            angular_rp_forest=False,
+            target_n_neighbors=-1,
+            target_metric="categorical",
+            target_metric_kwds=None,
+            target_weight=0.5,
+            transform_seed=42,
+            transform_mode="embedding",
+            force_approximation_algorithm=False,
+            verbose=False,
+            tqdm_kwds=None,
+            unique=False,
+            densmap=False,
+            dens_lambda=2.0,
+            dens_frac=0.3,
+            dens_var_shift=0.1,
+            output_dens=False,
+            disconnection_distance=None,
+            precomputed_knn=(None, None, None),
+            k=1,
+    ):
+        super().__init__(
+            n_neighbors=n_neighbors,
+            n_components=n_components,
+            metric=metric,
+            metric_kwds=metric_kwds,
+            output_metric=output_metric,
+            output_metric_kwds=output_metric_kwds,
+            n_epochs=n_epochs,
+            learning_rate=learning_rate,
+            init=init,
+            min_dist=min_dist,
+            spread=spread,
+            low_memory=low_memory,
+            n_jobs=n_jobs,
+            set_op_mix_ratio=set_op_mix_ratio,
+            local_connectivity=local_connectivity,
+            repulsion_strength=repulsion_strength,
+            negative_sample_rate=negative_sample_rate,
+            transform_queue_size=transform_queue_size,
+            a=a,
+            b=b,
+            random_state=random_state,
+            angular_rp_forest=angular_rp_forest,
+            target_n_neighbors=target_n_neighbors,
+            target_metric=target_metric,
+            target_metric_kwds=target_metric_kwds,
+            target_weight=target_weight,
+            transform_seed=transform_seed,
+            transform_mode=transform_mode,
+            force_approximation_algorithm=force_approximation_algorithm,
+            verbose=verbose,
+            tqdm_kwds=tqdm_kwds,
+            unique=unique,
+            densmap=densmap,
+            dens_lambda=dens_lambda,
+            dens_frac=dens_frac,
+            dens_var_shift=dens_var_shift,
+            output_dens=output_dens,
+            disconnection_distance=disconnection_distance,
+            precomputed_knn=precomputed_knn,
+        )
+        self.k = k
         self._knn = NearestNeighbors(
             n_neighbors=self.n_neighbors,
             # radius=1.0,
@@ -130,6 +215,7 @@ class ApproxUMAP(UMAP, metaclass=PostInitCaller):
         neigh_emb = self.embedding_[neigh_ind]
         epsilon = 1e-8
         neigh_sim = 1 / (neigh_dist + epsilon)
+        neigh_sim = 1 / (neigh_dist * self.k + epsilon)
         emb = np.sum(neigh_sim[:, :, None] / neigh_sim.sum(axis=1)[:, None, None] * neigh_emb,
                      axis=1)
         return emb
