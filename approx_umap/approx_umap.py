@@ -7,6 +7,8 @@ from umap import UMAP
 from sklearn.neighbors import NearestNeighbors
 from docstring_inheritance import NumpyDocstringInheritanceMeta
 
+from approx_umap.functions import approximate_embedding
+
 
 class ApproxUMAP(UMAP, metaclass=NumpyDocstringInheritanceMeta):
     """Approximate UMAP
@@ -106,7 +108,7 @@ class ApproxUMAP(UMAP, metaclass=NumpyDocstringInheritanceMeta):
             precomputed_knn=precomputed_knn,
         )
         self.k = k
-        self._fn = fn
+        self.fn = fn
         self._knn = NearestNeighbors(
             n_neighbors=self.n_neighbors,
             # radius=1.0,
@@ -117,14 +119,6 @@ class ApproxUMAP(UMAP, metaclass=NumpyDocstringInheritanceMeta):
             metric_params=self.metric_kwds,
             n_jobs=self.n_jobs,
         )
-
-    def fn(self, d):
-        epsilon = 1e-8
-        if self._fn == "inv":
-            return 1 / (d + epsilon)
-        if self._fn == "exp":
-            return np.exp(-d) + epsilon
-        return self._fn(d)
 
     def fit(self, X, y=None, force_all_finite=True):
         """Fit X into an embedded space.
@@ -216,14 +210,7 @@ class ApproxUMAP(UMAP, metaclass=NumpyDocstringInheritanceMeta):
         X_new : array, shape (n_samples, n_components)
             Approximate embedding of the new data in low-dimensional space.
         """
-        n_neighbors = min(self._knn.n_neighbors, self.embedding_.shape[0])
-        neigh_dist, neigh_ind = self._knn.kneighbors(
-            X, n_neighbors=n_neighbors, return_distance=True)
-        neigh_emb = self.embedding_[neigh_ind]
-        neigh_sim = self.fn(neigh_dist * self.k)
-        emb = np.sum(neigh_sim[:, :, None] / neigh_sim.sum(axis=1)[:, None, None] * neigh_emb,
-                     axis=1)
-        return emb
+        return approximate_embedding(X, self._knn, self.embedding_, self.k, self.fn)
 
     def transform_exact(self, X, force_all_finite=True):
         """Original exact transform method from UMAP.
