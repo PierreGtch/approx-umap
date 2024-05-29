@@ -226,7 +226,7 @@ class ApproxUMAP(UMAP, metaclass=NumpyDocstringInheritanceMeta):
         return emb
 
     def transform_exact(self, X, force_all_finite=True):
-        """Original exact tronsform method from UMAP.
+        """Original exact transform method from UMAP.
 
         Parameters
         ----------

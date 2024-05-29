@@ -301,3 +301,69 @@ class ApproxAlignedUMAP(BaseEstimator):
         )
         self._save_Xy(X, y)
         return self
+
+    def update(self, X, y=None, **fit_params):
+        """ Update the model with new data.
+
+        A new ApproxUMAP model is fitted to the new data X plus all the pre-existing data.
+
+        Parameters
+        ----------
+        X : array, shape (n_samples, n_features)
+            The new data to be added to the model.
+        """
+        if self.last_X_ is None:
+            raise ValueError("Must fit model before updating")
+        full_X = np.concatenate([self.last_X_, X], axis=0)
+        if y is not None:
+            assert self.last_y_ is not None, "y was not provided during last fit"
+            full_y = np.concatenate([self.last_y_, y], axis=0)
+        else:
+            full_y = None
+        relations = {i: i for i in range(len(self.last_X_))}
+        return self.aligned_fit(full_X, full_y, relations=relations, **fit_params)
+
+    def update_transform(self, X, y=None, **fit_params):
+        self.update(X, y, **fit_params)
+        return self.embeddings_[-1]
+
+    def transform(self, X):
+        """Transform X into the las update of the embedded space using the approximate
+        UMAP algorithm and return that transformed output.
+
+        The projections are approximated by finding the nearest neighbors in the
+        source space and computing their weighted average in the embedding space.
+        The weights are the inverse of the distances in the source space.
+
+        Parameters
+        ----------
+        X : array, shape (n_samples, n_features)
+            New data to be transformed.
+
+        Returns
+        -------
+        X_new : array, shape (n_samples, n_components)
+            Approximate embedding of the new data in low-dimensional space.
+        """
+        return self.mappers_[-1].transform(X)
+
+    def transform_exact(self, X, force_all_finite=True):
+        """Original exact transform method from the last update of UMAP.
+
+        Parameters
+        ----------
+        X : array, shape (n_samples, n_features)
+            New data to be transformed.
+
+        force_all_finite : Whether to raise an error on np.inf, np.nan, pd.NA in array.
+            The possibilities are: - True: Force all values of array to be finite.
+                                   - False: accepts np.inf, np.nan, pd.NA in array.
+                                   - 'allow-nan': accepts only np.nan and pd.NA values in array.
+                                     Values cannot be infinite.
+
+        Returns
+        -------
+        X_new : array, shape (n_samples, n_components)
+            Embedding of the new data in low-dimensional space.
+        """
+        return self.mappers_[-1].transform_exact(X, force_all_finite)
