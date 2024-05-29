@@ -180,7 +180,7 @@ class ApproxAlignedUMAP(BaseEstimator):
         self.fit(X, y, **fit_params)
         return self.embeddings_[-1]
 
-    def update(self, X, y=None, **fit_params):
+    def aligned_fit(self, X, y=None, **fit_params):
         if "relations" not in fit_params:
             raise ValueError(
                 "Aligned UMAP requires relations between data to be " "specified"
@@ -202,7 +202,7 @@ class ApproxAlignedUMAP(BaseEstimator):
 
         n_epochs = self.n_epochs
 
-        new_mapper = UMAP(
+        new_mapper = ApproxUMAP(
             n_neighbors=get_nth_item_or_val(self.n_neighbors, self.n_models_),
             min_dist=get_nth_item_or_val(self.min_dist, self.n_models_),
             n_epochs=get_nth_item_or_val(self.n_epochs, self.n_models_),
@@ -236,6 +236,8 @@ class ApproxAlignedUMAP(BaseEstimator):
             verbose=self.verbose,
             a=self.a,
             b=self.b,
+            k=self.k,
+            fn=self.fn,
         ).fit(X, y)
 
         self.n_models_ += 1
@@ -297,3 +299,5 @@ class ApproxAlignedUMAP(BaseEstimator):
             seed_triplet,
             lambda_=self.alignment_regularisation,
         )
+        self._save_Xy(X, y)
+        return self
