@@ -1,1 +1,2 @@
 from approx_umap.approx_umap import ApproxUMAP
+from approx_umap.approx_aligned_umap import ApproxAlignedUMAP
