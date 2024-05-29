@@ -25,7 +25,21 @@ from umap.aligned_umap import (
 from approx_umap import ApproxUMAP
 
 
-class AlignedUMAP(BaseEstimator):
+class ApproxAlignedUMAP(BaseEstimator):
+    """Approximate aligned UMAP
+
+    Parameters
+    ----------
+    k: float
+        Temperature parameter.
+    fn: str | Callable[[ndarray], ndarray]
+        Function to apply to the distances before computing the weights.
+        If a string, can be 'inv' for 1/d or 'exp'  for exp(-d).
+    copy_data: bool
+        When fitting or updating ApproxAlignedUMAP, the training data is stored.
+        By default it is copied. If set to False, the data is not copied.
+    """
+
     def __init__(
             self,
             n_neighbors=15,
@@ -57,6 +71,9 @@ class AlignedUMAP(BaseEstimator):
             force_approximation_algorithm=False,
             verbose=False,
             unique=False,
+            k=1,
+            fn="inv",
+            copy_data=True,
     ):
 
         self.n_neighbors = n_neighbors
@@ -92,36 +109,31 @@ class AlignedUMAP(BaseEstimator):
         self.a = a
         self.b = b
 
-    def fit(self, X, y=None, **fit_params):
-        if "relations" not in fit_params:
-            raise ValueError(
-                "Aligned UMAP requires relations between data to be " "specified"
-            )
+        self.k = k
+        self.fn = fn
 
-        self.dict_relations_ = fit_params["relations"]
-        assert type(self.dict_relations_) in (list, tuple)
-        assert type(X) in (list, tuple, np.ndarray)
-        assert (len(X) - 1) == (len(self.dict_relations_))
+        self.copy_data = copy_data
+
+    def fit(self, X, y=None, **fit_params):
+
+        self.dict_relations_ = []
+        assert type(X) == np.ndarray
 
         if y is not None:
-            assert type(y) in (list, tuple, np.ndarray)
-            assert (len(y) - 1) == (len(self.dict_relations_))
-        else:
-            y = [None] * len(X)
+            assert type(y) == np.ndarray
 
         # We need n_components to be constant or this won't work
         if type(self.n_components) in (list, tuple, np.ndarray):
             raise ValueError("n_components must be a single integer, and cannot vary")
 
-        self.n_models_ = len(X)
+        self.n_models_ = 1
 
         if self.n_epochs is None:
             self.n_epochs = 200
 
-        n_epochs = self.n_epochs
-
+        n = 0
         self.mappers_ = [
-            UMAP(
+            ApproxUMAP(
                 n_neighbors=get_nth_item_or_val(self.n_neighbors, n),
                 min_dist=get_nth_item_or_val(self.min_dist, n),
                 n_epochs=get_nth_item_or_val(self.n_epochs, n),
@@ -149,99 +161,24 @@ class AlignedUMAP(BaseEstimator):
                 verbose=self.verbose,
                 a=self.a,
                 b=self.b,
-            ).fit(X[n], y[n])
-            for n in range(self.n_models_)
+                k=self.k,
+                fn=self.fn,
+            ).fit(X, y),
         ]
 
-        window_size = fit_params.get("window_size", self.alignment_window_size)
-        relations = expand_relations(self.dict_relations_, window_size)
+        self.embeddings_ = [self.mappers_[0].embedding_]
 
-        indptr_list = numba.typed.List.empty_list(numba.types.int32[::1])
-        indices_list = numba.typed.List.empty_list(numba.types.int32[::1])
-        heads = numba.typed.List.empty_list(numba.types.int32[::1])
-        tails = numba.typed.List.empty_list(numba.types.int32[::1])
-        epochs_per_samples = numba.typed.List.empty_list(numba.types.float64[::1])
-
-        for mapper in self.mappers_:
-            indptr_list.append(mapper.graph_.indptr)
-            indices_list.append(mapper.graph_.indices)
-            heads.append(mapper.graph_.tocoo().row)
-            tails.append(mapper.graph_.tocoo().col)
-            epochs_per_samples.append(
-                make_epochs_per_sample(mapper.graph_.tocoo().data, n_epochs)
-            )
-
-        rng_state_transform = np.random.RandomState(self.transform_seed)
-        regularisation_weights = build_neighborhood_similarities(
-            indptr_list,
-            indices_list,
-            relations,
-        )
-        first_init = spectral_layout(
-            self.mappers_[0]._raw_data,
-            self.mappers_[0].graph_,
-            self.n_components,
-            rng_state_transform,
-        )
-        expansion = 10.0 / np.abs(first_init).max()
-        first_embedding = (first_init * expansion).astype(
-            np.float32,
-            order="C",
-        )
-
-        embeddings = numba.typed.List.empty_list(numba.types.float32[:, ::1])
-        embeddings.append(first_embedding)
-        for i in range(1, self.n_models_):
-            next_init = spectral_layout(
-                self.mappers_[i]._raw_data,
-                self.mappers_[i].graph_,
-                self.n_components,
-                rng_state_transform,
-            )
-            expansion = 10.0 / np.abs(next_init).max()
-            next_embedding = (next_init * expansion).astype(
-                np.float32,
-                order="C",
-            )
-            anchor_data = relations[i][window_size - 1]
-            left_anchors = anchor_data[anchor_data >= 0]
-            right_anchors = np.where(anchor_data >= 0)[0]
-            embeddings.append(
-                procrustes_align(
-                    embeddings[-1],
-                    next_embedding,
-                    np.vstack([left_anchors, right_anchors]),
-                )
-            )
-
-        seed_triplet = rng_state_transform.randint(INT32_MIN, INT32_MAX, 3).astype(
-            np.int64
-        )
-        self.embeddings_ = optimize_layout_aligned_euclidean(
-            embeddings,
-            embeddings,
-            heads,
-            tails,
-            n_epochs,
-            epochs_per_samples,
-            regularisation_weights,
-            relations,
-            seed_triplet,
-            lambda_=self.alignment_regularisation,
-            move_other=True,
-        )
-
-        for i, embedding in enumerate(self.embeddings_):
-            disconnected_vertices = (
-                    np.array(self.mappers_[i].graph_.sum(axis=1)).flatten() == 0
-            )
-            embedding[disconnected_vertices] = np.full(self.n_components, np.nan)
+        self._save_Xy(X, y)
 
         return self
 
+    def _save_Xy(self, X, y):
+        self.last_X_ = X.copy() if self.copy_data else X
+        self.last_y_ = y.copy() if self.copy_data and y is not None else y
+
     def fit_transform(self, X, y=None, **fit_params):
         self.fit(X, y, **fit_params)
-        return self.embeddings_
+        return self.embeddings_[-1]
 
     def update(self, X, y=None, **fit_params):
         if "relations" not in fit_params:
